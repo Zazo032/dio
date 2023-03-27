@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'adapter.dart';
 import 'cancel_token.dart';
 import 'headers.dart';
@@ -94,6 +96,7 @@ class BaseOptions extends _RequestConfig with OptionsMixin {
     Map<String, dynamic>? queryParameters,
     Map<String, dynamic>? extra,
     Map<String, dynamic>? headers,
+    bool? preserveHeaderCase,
     ResponseType? responseType = ResponseType.json,
     String? contentType,
     ValidateStatus? validateStatus,
@@ -112,6 +115,7 @@ class BaseOptions extends _RequestConfig with OptionsMixin {
           sendTimeout: sendTimeout,
           extra: extra,
           headers: headers,
+          preserveHeaderCase: preserveHeaderCase,
           responseType: responseType,
           contentType: contentType,
           validateStatus: validateStatus,
@@ -139,6 +143,7 @@ class BaseOptions extends _RequestConfig with OptionsMixin {
     Duration? sendTimeout,
     Map<String, Object?>? extra,
     Map<String, Object?>? headers,
+    bool? preserveHeaderCase,
     ResponseType? responseType,
     String? contentType,
     ValidateStatus? validateStatus,
@@ -159,6 +164,7 @@ class BaseOptions extends _RequestConfig with OptionsMixin {
       sendTimeout: sendTimeout ?? this.sendTimeout,
       extra: extra ?? Map.from(this.extra),
       headers: headers ?? Map.from(this.headers),
+      preserveHeaderCase: preserveHeaderCase ?? this.preserveHeaderCase,
       responseType: responseType ?? this.responseType,
       contentType: contentType ?? this.contentType,
       validateStatus: validateStatus ?? this.validateStatus,
@@ -209,6 +215,7 @@ class Options {
     Duration? receiveTimeout,
     this.extra,
     this.headers,
+    this.preserveHeaderCase,
     this.responseType,
     this.contentType,
     this.validateStatus,
@@ -231,6 +238,7 @@ class Options {
     Duration? receiveTimeout,
     Map<String, Object?>? extra,
     Map<String, Object?>? headers,
+    bool? preserveHeaderCase,
     ResponseType? responseType,
     String? contentType,
     ValidateStatus? validateStatus,
@@ -242,16 +250,16 @@ class Options {
     ResponseDecoder? responseDecoder,
     ListFormat? listFormat,
   }) {
-    Map<String, dynamic>? effectiveHeaders;
+    LinkedHashMap<String, dynamic>? effectiveHeaders;
     if (headers == null && this.headers != null) {
-      effectiveHeaders = caseInsensitiveKeyMap(this.headers!);
+      effectiveHeaders = caseInsensitiveEqualityMap(this.headers!);
     }
 
     if (headers != null) {
-      headers = caseInsensitiveKeyMap(headers);
+      effectiveHeaders = caseInsensitiveEqualityMap(headers);
       assert(
         !(contentType != null &&
-            headers.containsKey(Headers.contentTypeHeader)),
+            effectiveHeaders.containsKey(Headers.contentTypeHeader)),
         'You cannot set both contentType param and a content-type header',
       );
     }
@@ -266,7 +274,8 @@ class Options {
       sendTimeout: sendTimeout ?? this.sendTimeout,
       receiveTimeout: receiveTimeout ?? this.receiveTimeout,
       extra: extra ?? effectiveExtra,
-      headers: headers ?? effectiveHeaders,
+      headers: effectiveHeaders,
+      preserveHeaderCase: preserveHeaderCase ?? this.preserveHeaderCase,
       responseType: responseType ?? this.responseType,
       contentType: contentType ?? this.contentType,
       validateStatus: validateStatus ?? this.validateStatus,
@@ -295,7 +304,7 @@ class Options {
     query.addAll(baseOpt.queryParameters);
     if (queryParameters != null) query.addAll(queryParameters);
 
-    final headers = caseInsensitiveKeyMap(baseOpt.headers);
+    final headers = caseInsensitiveEqualityMap(baseOpt.headers);
     if (this.headers != null) {
       headers.addAll(this.headers!);
     }
@@ -311,6 +320,7 @@ class Options {
     final requestOptions = RequestOptions(
       method: method,
       headers: headers,
+      preserveHeaderCase: preserveHeaderCase ?? baseOpt.preserveHeaderCase,
       extra: extra,
       baseUrl: baseOpt.baseUrl,
       path: path,
@@ -347,6 +357,9 @@ class Options {
   /// The key of Header Map is case-insensitive, eg: content-type and Content-Type are
   /// regard as the same key.
   Map<String, dynamic>? headers;
+
+  /// Whether the capital cases should be kept for headers.
+  bool? preserveHeaderCase;
 
   /// Timeout in milliseconds for sending data.
   /// [Dio] will throw the [DioError] with [DioErrorType.sendTimeout] type
@@ -460,6 +473,7 @@ class RequestOptions extends _RequestConfig with OptionsMixin {
     String? baseUrl,
     Map<String, dynamic>? extra,
     Map<String, dynamic>? headers,
+    bool? preserveHeaderCase,
     ResponseType? responseType,
     String? contentType,
     ValidateStatus? validateStatus,
@@ -478,6 +492,7 @@ class RequestOptions extends _RequestConfig with OptionsMixin {
           receiveTimeout: receiveTimeout,
           extra: extra,
           headers: headers,
+          preserveHeaderCase: preserveHeaderCase,
           responseType: responseType,
           contentType: contentType,
           validateStatus: validateStatus,
@@ -509,6 +524,7 @@ class RequestOptions extends _RequestConfig with OptionsMixin {
     CancelToken? cancelToken,
     Map<String, dynamic>? extra,
     Map<String, dynamic>? headers,
+    bool? preserveHeaderCase,
     ResponseType? responseType,
     String? contentType,
     ValidateStatus? validateStatus,
@@ -521,10 +537,8 @@ class RequestOptions extends _RequestConfig with OptionsMixin {
     ListFormat? listFormat,
     bool? setRequestContentTypeWhenNoPayload,
   }) {
-    final contentTypeInHeader = headers != null &&
-        headers.keys
-            .map((e) => e.toLowerCase())
-            .contains(Headers.contentTypeHeader);
+    final contentTypeInHeader =
+        headers != null && headers.containsKey(Headers.contentTypeHeader);
 
     assert(
       !(contentType != null && contentTypeInHeader),
@@ -545,6 +559,7 @@ class RequestOptions extends _RequestConfig with OptionsMixin {
       cancelToken: cancelToken ?? this.cancelToken,
       extra: extra ?? Map.from(this.extra),
       headers: headers ?? Map.from(this.headers),
+      preserveHeaderCase: preserveHeaderCase ?? this.preserveHeaderCase,
       responseType: responseType ?? this.responseType,
       validateStatus: validateStatus ?? this.validateStatus,
       receiveDataWhenStatusError:
@@ -613,6 +628,7 @@ class _RequestConfig {
     String? method,
     Map<String, dynamic>? extra,
     Map<String, dynamic>? headers,
+    bool? preserveHeaderCase,
     String? contentType,
     ListFormat? listFormat,
     bool? followRedirects,
@@ -627,8 +643,9 @@ class _RequestConfig {
         _receiveTimeout = receiveTimeout,
         assert(sendTimeout == null || !sendTimeout.isNegative),
         _sendTimeout = sendTimeout {
+    // Handling headers first.
+    this.preserveHeaderCase = preserveHeaderCase ?? false;
     this.headers = headers;
-
     final contentTypeInHeader =
         this.headers.containsKey(Headers.contentTypeHeader);
     assert(
@@ -657,17 +674,19 @@ class _RequestConfig {
   /// Http method.
   late String method;
 
+  /// Whether the capital cases should be kept for headers.
+  late bool preserveHeaderCase;
+
   /// Http request headers. The keys of initial headers will be converted to lowercase,
   /// for example 'Content-Type' will be converted to 'content-type'.
   ///
   /// The key of Header Map is case-insensitive, eg: content-type and Content-Type are
   /// regard as the same key.
-
   Map<String, dynamic> get headers => _headers;
   late Map<String, dynamic> _headers;
 
   set headers(Map<String, dynamic>? headers) {
-    _headers = caseInsensitiveKeyMap(headers);
+    _headers = caseInsensitiveEqualityMap(headers);
     if (!_headers.containsKey(Headers.contentTypeHeader) &&
         _defaultContentType != null) {
       _headers[Headers.contentTypeHeader] = _defaultContentType;

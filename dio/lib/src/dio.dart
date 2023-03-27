@@ -17,24 +17,24 @@ import 'dio/dio_for_native.dart'
 ///
 /// You can create a dio instance and config it by two ways:
 /// 1. create first , then config it
-///
-///   ```dart
-///    final dio = Dio();
-///    dio.options.baseUrl = "http://www.dtworkroom.com/doris/1/2.0.0/";
-///    dio.options.connectTimeout = const Duration(seconds: 5);
-///    dio.options.receiveTimeout = const Duration(seconds: 5);
-///    dio.options.headers = {HttpHeaders.userAgentHeader: 'dio', 'common-header': 'xx'};
-///   ```
-/// 2. create and config it:
-///
 /// ```dart
-///   final dio = Dio(BaseOptions(
-///    baseUrl: "http://www.dtworkroom.com/doris/1/2.0.0/",
-///    connectTimeout: const Duration(seconds: 5),
-///    receiveTimeout: const Duration(seconds: 5),
-///    headers: {HttpHeaders.userAgentHeader: 'dio', 'common-header': 'xx'},
-///   ));
-///  ```
+/// final dio = Dio();
+/// dio.options.baseUrl = "https://pub.dev/";
+/// dio.options.connectTimeout = const Duration(seconds: 5);
+/// dio.options.receiveTimeout = const Duration(seconds: 5);
+/// dio.options.headers = {HttpHeaders.userAgentHeader: 'dio', 'common-header': 'xx'};
+/// ```
+/// 2. create and config it:
+/// ```dart
+/// final dio = Dio(
+///   BaseOptions(
+///     baseUrl: 'https://pub.dev/',
+///     connectTimeout: const Duration(seconds: 5),
+///     receiveTimeout: const Duration(seconds: 5),
+///     headers: {HttpHeaders.userAgentHeader: 'dio', 'common-header': 'xx'},
+///   ),
+/// );
+/// ```
 
 abstract class Dio {
   factory Dio([BaseOptions? options]) => createDio(options);
@@ -46,8 +46,8 @@ abstract class Dio {
 
   late HttpClientAdapter httpClientAdapter;
 
-  /// [transformer] allows changes to the request/response data before it is sent/received to/from the server
-  /// This is only applicable for request methods 'PUT', 'POST', and 'PATCH'.
+  /// [transformer] allows changes to the request/response data
+  /// before it is sent/received to/from the server.
   late Transformer transformer;
 
   /// Shuts down the dio client.
@@ -60,7 +60,7 @@ abstract class Dio {
   /// calling [close] will throw an exception.
   void close({bool force = false});
 
-  /// Handy method to make http GET request, which is a alias of  [dio.fetch(RequestOptions)].
+  /// Handy method to make HTTP **GET** request, which is a alias of [fetch].
   Future<Response<T>> get<T>(
     String path, {
     Object? data,
@@ -70,7 +70,7 @@ abstract class Dio {
     ProgressCallback? onReceiveProgress,
   });
 
-  /// Handy method to make http GET request, which is a alias of [dio.fetch(RequestOptions)].
+  /// Handy method to make HTTP **GET** request, which is a alias of [fetch].
   Future<Response<T>> getUri<T>(
     Uri uri, {
     Object? data,
@@ -79,7 +79,7 @@ abstract class Dio {
     ProgressCallback? onReceiveProgress,
   });
 
-  /// Handy method to make http POST request, which is a alias of  [dio.fetch(RequestOptions)].
+  /// Handy method to make HTTP **POST** requests, which is a alias of [fetch].
   Future<Response<T>> post<T>(
     String path, {
     Object? data,
@@ -90,7 +90,7 @@ abstract class Dio {
     ProgressCallback? onReceiveProgress,
   });
 
-  /// Handy method to make http POST request, which is a alias of  [dio.fetch(RequestOptions)].
+  /// Handy method to make HTTP **POST** request, which is a alias of [fetch].
   Future<Response<T>> postUri<T>(
     Uri uri, {
     Object? data,
@@ -100,7 +100,7 @@ abstract class Dio {
     ProgressCallback? onReceiveProgress,
   });
 
-  /// Handy method to make http PUT request, which is a alias of  [dio.fetch(RequestOptions)].
+  /// Handy method to make HTTP **PUT** request, which is a alias of [fetch].
   Future<Response<T>> put<T>(
     String path, {
     Object? data,
@@ -111,7 +111,7 @@ abstract class Dio {
     ProgressCallback? onReceiveProgress,
   });
 
-  /// Handy method to make http PUT request, which is a alias of  [dio.fetch(RequestOptions)].
+  /// Handy method to make HTTP **PUT** request, which is a alias of [fetch].
   Future<Response<T>> putUri<T>(
     Uri uri, {
     Object? data,
@@ -121,7 +121,7 @@ abstract class Dio {
     ProgressCallback? onReceiveProgress,
   });
 
-  /// Handy method to make http HEAD request, which is a alias of [dio.fetch(RequestOptions)].
+  /// Handy method to make HTTP **HEAD** request, which is a alias of [fetch].
   Future<Response<T>> head<T>(
     String path, {
     Object? data,
@@ -130,7 +130,7 @@ abstract class Dio {
     CancelToken? cancelToken,
   });
 
-  /// Handy method to make http HEAD request, which is a alias of [dio.fetch(RequestOptions)].
+  /// Handy method to make HTTP **HEAD** request, which is a alias of [fetch].
   Future<Response<T>> headUri<T>(
     Uri uri, {
     Object? data,
@@ -138,7 +138,7 @@ abstract class Dio {
     CancelToken? cancelToken,
   });
 
-  /// Handy method to make http DELETE request, which is a alias of  [dio.fetch(RequestOptions)].
+  /// Handy method to make HTTP **DELETE** request, which is a alias of [fetch].
   Future<Response<T>> delete<T>(
     String path, {
     Object? data,
@@ -147,7 +147,7 @@ abstract class Dio {
     CancelToken? cancelToken,
   });
 
-  /// Handy method to make http DELETE request, which is a alias of  [dio.fetch(RequestOptions)].
+  /// Handy method to make HTTP **DELETE** request, which is a alias of [fetch].
   Future<Response<T>> deleteUri<T>(
     Uri uri, {
     Object? data,
@@ -155,7 +155,7 @@ abstract class Dio {
     CancelToken? cancelToken,
   });
 
-  /// Handy method to make http PATCH request, which is a alias of  [dio.fetch(RequestOptions)].
+  /// Handy method to make HTTP **PATCH** request, which is a alias of [fetch].
   Future<Response<T>> patch<T>(
     String path, {
     Object? data,
@@ -166,7 +166,7 @@ abstract class Dio {
     ProgressCallback? onReceiveProgress,
   });
 
-  /// Handy method to make http PATCH request, which is a alias of  [dio.fetch(RequestOptions)].
+  /// Handy method to make HTTP **PATCH** request, which is a alias of [fetch].
   Future<Response<T>> patchUri<T>(
     Uri uri, {
     Object? data,

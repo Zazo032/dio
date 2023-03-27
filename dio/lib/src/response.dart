@@ -14,7 +14,7 @@ class Response<T> {
     this.redirects = const [],
     this.extra = const {},
     Headers? headers,
-  }) : headers = headers ?? Headers();
+  }) : _headers = headers ?? Headers();
 
   /// Response body. may have been transformed, please refer to [ResponseType].
   T? data;
@@ -47,7 +47,13 @@ class Response<T> {
   Map<String, dynamic> extra;
 
   /// Response headers.
-  Headers headers;
+  Headers get headers => Headers.fromMap(_headers.map);
+  Headers _headers;
+
+  set headers(Headers value) => _headers = value;
+
+  /// Response headers without lower-cased keys.
+  Headers get headersCaseSensitive => _headers;
 
   /// Return the final real request URI (may be redirected).
   ///

@@ -45,7 +45,7 @@ class MultipartFile {
     MediaType? contentType,
     Map<String, List<String>>? headers,
   })  : _stream = stream,
-        headers = caseInsensitiveKeyMap(headers),
+        headers = caseInsensitiveEqualityMap(headers),
         contentType = contentType ?? MediaType('application', 'octet-stream');
 
   /// Creates a new [MultipartFile] from a byte array.

@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:http_parser/http_parser.dart';
 
 import 'utils.dart';
@@ -20,22 +22,29 @@ class Headers {
 
   static final jsonMimeType = MediaType.parse(jsonContentType);
 
-  final Map<String, List<String>> _map;
+  final LinkedHashMap<String, List<String>> _map;
 
-  Map<String, List<String>> get map => _map;
+  LinkedHashMap<String, List<String>> get map => _map;
 
-  Headers() : _map = caseInsensitiveKeyMap<List<String>>();
+  Headers() : _map = caseInsensitiveEqualityMap<List<String>>();
 
-  Headers.fromMap(Map<String, List<String>> map)
-      : _map = caseInsensitiveKeyMap<List<String>>(
-          map.map((k, v) => MapEntry(k.trim().toLowerCase(), v)),
+  Headers.fromMap(
+    Map<String, List<String>> map, {
+    bool? preserveHeaderCase,
+  }) : _map = caseInsensitiveEqualityMap<List<String>>(
+          map.map((k, v) {
+            final String key = preserveHeaderCase == true ? k : k.toLowerCase();
+            return MapEntry(key.trim(), v);
+          }),
         );
+
+  bool containsKey(String key) {
+    return _map.keys.any((k) => k.toLowerCase() == key.toLowerCase());
+  }
 
   /// Returns the list of values for the header named [name]. If there
   /// is no header with the provided name, [:null:] will be returned.
-  List<String>? operator [](String name) {
-    return _map[name.trim().toLowerCase()];
-  }
+  List<String>? operator [](String name) => _map[name.trim()];
 
   /// Convenience method for the value for a single valued header. If
   /// there is no header with the provided name, [:null:] will be
@@ -60,9 +69,12 @@ class Headers {
 
   /// Sets a header. The header named [name] will have all its values
   /// cleared before the value [value] is added as its value.
-  void set(String name, dynamic value) {
+  void set(String name, dynamic value, {bool? preserveHeaderCase}) {
     if (value == null) return;
-    name = name.trim().toLowerCase();
+    name = name.trim();
+    if (preserveHeaderCase != true) {
+      name = name.toLowerCase();
+    }
     if (value is List) {
       _map[name] = value.map<String>((e) => e.toString()).toList();
     } else {

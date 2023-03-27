@@ -9,34 +9,52 @@ void main() {
   setUp(startServer);
   tearDown(stopServer);
 
-  test('headers are kept after redirects', () async {
-    final dio = Dio(
-      BaseOptions(
-        baseUrl: serverUrl.toString(),
-        headers: {'x-test-base': 'test-base'},
-      ),
-    );
-    final response = await dio.get(
-      '/redirect',
-      options: Options(headers: {'x-test-header': 'test-value'}),
-    );
-    expect(response.isRedirect, isTrue);
-    expect(
-      response.data['headers']['x-test-base'].single,
-      equals('test-base'),
-    );
-    expect(
-      response.data['headers']['x-test-header'].single,
-      equals('test-value'),
-    );
-    expect(
-      response.requestOptions.headers['x-test-base'],
-      equals('test-base'),
-    );
-    expect(
-      response.requestOptions.headers['x-test-header'],
-      equals('test-value'),
-    );
+  group('Headers', () {
+    test('are kept after redirects', () async {
+      final dio = Dio(
+        BaseOptions(
+          baseUrl: serverUrl.toString(),
+          headers: {'x-test-base': 'test-base'},
+        ),
+      );
+      dio.interceptors.add(LogInterceptor());
+      final response = await dio.get(
+        '/redirect',
+        options: Options(headers: {'X-test-header': 'test-value'}),
+      );
+      expect(response.isRedirect, isTrue);
+      expect(
+        response.data['headers']['x-test-base'].single,
+        equals('test-base'),
+      );
+      expect(
+        response.data['headers']['x-test-header'].single,
+        equals('test-value'),
+      );
+      expect(
+        response.requestOptions.headers['x-test-base'],
+        equals('test-base'),
+      );
+      expect(
+        response.requestOptions.headers['x-test-header'],
+        equals('test-value'),
+      );
+    });
+
+    test('can be case sensitive', () async {
+      final dio = Dio(
+        BaseOptions(
+          baseUrl: EchoAdapter.mockBase,
+          headers: {'Sensitive-A': 'A'},
+        ),
+      )..httpClientAdapter = EchoAdapter();
+      final response = await dio.get(
+        '/',
+        options: Options(headers: {'insensitive-b': 'b'}),
+      );
+      expect(response.headers.containsKey('sensitive-a'), isTrue);
+      expect(response.headersCaseSensitive.containsKey('Sensitive-A'), isTrue);
+    });
   });
 
   test('options', () {

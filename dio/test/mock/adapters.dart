@@ -123,10 +123,11 @@ class EchoAdapter implements HttpClientAdapter {
     final Uri uri = options.uri;
     if (uri.host == mockHost) {
       final statusCode = int.tryParse(uri.path.replaceFirst('/', '')) ?? 200;
+      final headers = options.headers.map((k, v) => MapEntry(k, <String>[v]));
       if (requestStream != null) {
-        return ResponseBody(requestStream, statusCode);
+        return ResponseBody(requestStream, statusCode, headers: headers);
       } else {
-        return ResponseBody.fromString(uri.path, statusCode);
+        return ResponseBody.fromString(uri.path, statusCode, headers: headers);
       }
     }
     return _adapter.fetch(options, requestStream, cancelFuture);

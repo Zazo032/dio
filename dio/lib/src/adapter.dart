@@ -41,7 +41,7 @@ abstract class HttpClientAdapter {
   /// you can listen cancel event by it, for example:
   ///
   /// ```dart
-  ///  cancelFuture?.then((_)=>print("request cancelled!"))
+  /// cancelFuture?.then((_)=>print("request cancelled!"))
   /// ```
   /// [cancelFuture] will be null when the request is not set [CancelToken].
   Future<ResponseBody> fetch(

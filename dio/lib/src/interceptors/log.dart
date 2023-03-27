@@ -3,10 +3,10 @@ import '../dio_mixin.dart';
 import '../options.dart';
 import '../response.dart';
 
-/// [LogInterceptor] is used to print logs during network requests.
-/// It's better to add [LogInterceptor] to the tail of the interceptor queue,
-/// otherwise the changes made in the interceptor behind A will not be printed out.
-/// This is because the execution of interceptors is in the order of addition.
+/// [LogInterceptor] is used to print logs for requests, responses and errors.
+///
+/// The interceptor should be added to the tail of the interceptor queue,
+/// or changes happened in other interceptors will not be printed out.
 class LogInterceptor extends Interceptor {
   LogInterceptor({
     this.request = true,
@@ -18,34 +18,36 @@ class LogInterceptor extends Interceptor {
     this.logPrint = print,
   });
 
-  /// Print request [Options]
+  /// Whether [Options] should be printed.
   bool request;
 
-  /// Print request header [Options.headers]
+  /// Whether [Options.headers] should be printed.
   bool requestHeader;
 
-  /// Print request data [Options.data]
+  /// Whether [Options.data] should be printed.
   bool requestBody;
 
-  /// Print [Response.data]
+  /// Whether [Response.data] should be printed.
   bool responseBody;
 
-  /// Print [Response.headers]
+  /// Whether [Response.headers] should be printed.
   bool responseHeader;
 
-  /// Print error message
+  /// Whether error messages should be printed.
   bool error;
 
-  /// Log printer; defaults print log to console.
-  /// In flutter, you'd better use debugPrint.
-  /// you can also write log in a file, for example:
-  ///```dart
-  ///  final file=File("./log.txt");
-  ///  final sink=file.openWrite();
-  ///  dio.interceptors.add(LogInterceptor(logPrint: sink.writeln));
-  ///  ...
-  ///  await sink.close();
-  ///```
+  /// The print method for logging. Defaults to [print].
+  ///
+  /// It'll be better to use [debugPrint] in Flutter applications.
+  ///
+  /// You can also write log in a file, for example:
+  /// ```dart
+  /// final file = File('./log.txt');
+  /// final sink = file.openWrite();
+  /// dio.interceptors.add(LogInterceptor(logPrint: sink.writeln));
+  /// // ...
+  /// await sink.close();
+  /// ```
   void Function(Object object) logPrint;
 
   @override
